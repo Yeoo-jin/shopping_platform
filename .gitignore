@@ -8,3 +8,5 @@ uploads/
 static/uploads/
 instance/
 .pytest_cache/
+report_preview.html
+*.pdf
