@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block content %}
+<div class="detail-layout">
+<div>
+<div class="panel product-detail">
+{% if product['image_filename'] %}
+<img class="detail-image" src="{{ url_for('product_image', filename=product['image_filename']) }}" alt="{{ product['title'] }}">
+{% else %}<div class="detail-image placeholder">🌿</div>{% endif %}
+<div class="detail-content">
+<p class="eyebrow">중고 상품</p><h2>{{ product['title'] }}</h2>
+<p class="price">{{ "{:,}".format(product['price']) }}원</p>
+<hr><h3>상품 설명</h3><p class="pre description">{{ product['description'] }}</p>
+<div class="seller-box"><b>{{ product['username'] }}</b><span>{{ product['bio'] or '아직 판매자 소개가 없어요.' }}</span></div>
+{% if current_user %}
+<a class="button" href="{{ url_for('report', target_type='product', target_id=product['id']) }}">상품 신고</a>
+<a class="button secondary" href="{{ url_for('report', target_type='user', target_id=product['seller_id']) }}">판매자 신고</a>
+{% if current_user['id'] == product['seller_id'] or current_user['role']=='admin' %}
+<a class="button" href="{{ url_for('product_edit', product_id=product['id']) }}">수정</a>
+<form class="inline" method="post" action="{{ url_for('product_delete', product_id=product['id']) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button class="danger">삭제</button></form>
+{% endif %}{% endif %}
+</div></div></div>
+{% if current_user and current_user['id'] != product['seller_id'] %}
+<aside class="panel chat-login"><h3>{{ product['username'] }}님에게 궁금한 점이 있나요?</h3><p>이 상품에 대한 1:1 대화를 시작해 보세요. 대화 내역은 채팅 목록에서도 확인할 수 있어요.</p><a class="button wide-button" href="{{ url_for('chat_room', product_id=product['id'], partner_id=current_user['id']) }}">채팅하기</a></aside>
+{% elif current_user %}
+<aside class="panel chat-login"><h3>내가 등록한 상품이에요</h3><p>구매 희망자가 메시지를 보내면 채팅 목록에 표시됩니다.</p><a class="button wide-button" href="{{ url_for('chat') }}">채팅 목록 보기</a></aside>
+{% else %}
+<aside class="panel chat-login"><h3>판매자에게 궁금한 점이 있나요?</h3><p>로그인하면 이 상품 페이지에서 바로 대화할 수 있어요.</p><a class="button" href="{{ url_for('login') }}">로그인하고 채팅하기</a></aside>
+{% endif %}
+</div>
+{% endblock %}

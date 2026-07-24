@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block content %}
+<h2>관리자 페이지</h2>
+<div class="panel"><h3>사용자 관리</h3>
+<table><tr><th>ID</th><th>아이디</th><th>권한</th><th>차단</th><th>관리</th></tr>
+{% for u in users %}<tr><td>{{ u['id'] }}</td><td>{{ u['username'] }}</td><td>{{ u['role'] }}</td><td>{{ u['is_blocked'] }}</td>
+<td><form method="post" action="{{ url_for('admin_toggle_user', user_id=u['id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>차단 전환</button></form></td></tr>{% endfor %}
+</table></div>
+<div class="panel"><h3>상품 관리</h3>
+<table><tr><th>ID</th><th>상품명</th><th>판매자</th><th>상태</th><th>관리</th></tr>
+{% for p in products %}<tr><td>{{ p['id'] }}</td><td>{{ p['title'] }}</td><td>{{ p['username'] }}</td>
+<td>{{ '차단됨' if p['is_blocked'] else '공개' }}</td>
+<td><form method="post" action="{{ url_for('admin_toggle_product', product_id=p['id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>{{ '차단 해제' if p['is_blocked'] else '상품 차단' }}</button></form></td></tr>
+{% else %}<tr><td colspan="5">등록 상품 없음</td></tr>{% endfor %}</table></div>
+<div class="panel"><h3>신고 내역</h3>
+{% for r in reports %}<div class="admin-report"><p>#{{ r['id'] }} [{{ r['status'] }}] {{ r['reporter_name'] }} → {{ r['target_type'] }} {{ r['target_id'] }}: {{ r['reason'] }}</p>
+{% if r['status'] != 'resolved' %}<form method="post" action="{{ url_for('admin_resolve_report', report_id=r['id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>검토 완료</button></form>{% endif %}</div>
+{% else %}<p>신고 없음</p>{% endfor %}
+</div>
+<div class="panel"><h3>보안 감사 로그</h3>
+<table><tr><th>시각</th><th>작업자</th><th>작업</th><th>대상</th></tr>
+{% for log in audit_logs %}<tr><td>{{ log['created_at'] }}</td><td>{{ log['actor_name'] or '시스템' }}</td><td>{{ log['action'] }}</td><td>{{ log['target_type'] or '-' }} {{ log['target_id'] or '' }}</td></tr>
+{% else %}<tr><td colspan="4">감사 로그 없음</td></tr>{% endfor %}</table>
+</div>{% endblock %}

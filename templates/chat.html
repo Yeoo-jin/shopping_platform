@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}채팅 | Green Market{% endblock %}
+{% block content %}
+<section class="chat-list-wrap">
+  <div class="page-heading"><p class="eyebrow">MESSAGES</p><h1>채팅</h1><p>상품에 관심 있는 이웃과 나눈 대화예요.</p></div>
+  <div class="panel room-list">
+  {% for room in rooms %}
+    <a class="room-item" href="{{ url_for('chat_room', product_id=room['product_id'], partner_id=room['partner_id']) }}">
+      {% if room['image_filename'] %}
+      <img src="{{ url_for('product_image', filename=room['image_filename']) }}" alt="">
+      {% else %}<div class="room-image placeholder">🌿</div>{% endif %}
+      <div class="room-copy">
+        <div><b>{{ room['partner_name'] }}</b><time>{{ room['created_at'] }}</time></div>
+        <span class="room-product">{{ room['title'] }}</span>
+        <p>{{ room['content'] }}</p>
+      </div>
+      <span class="room-arrow">›</span>
+    </a>
+  {% else %}
+    <div class="empty-state"><span>💬</span><h3>아직 시작된 채팅이 없어요</h3><p>상품 상세 페이지에서 판매자에게 메시지를 보내보세요.</p><a class="button" href="{{ url_for('index') }}">상품 둘러보기</a></div>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

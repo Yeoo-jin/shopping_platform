@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block content %}
+<div class="panel"><h2>상품 수정</h2><form method="post" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>새 상품 사진<input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp"></label>
+<label>상품명<input name="title" value="{{ product['title'] }}" required maxlength="80"></label>
+<label>설명<textarea name="description" required maxlength="1000">{{ product['description'] }}</textarea></label>
+<label>가격<input type="number" name="price" value="{{ product['price'] }}" min="0" max="100000000" required></label>
+<button>수정</button></form></div>{% endblock %}

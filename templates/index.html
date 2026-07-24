@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>안전한 중고거래 플랫폼</h1>
+  <form method="get" class="search">
+    <input name="q" value="{{ q }}" maxlength="80" placeholder="상품명 또는 설명 검색">
+    <button>검색</button>
+  </form>
+</section>
+<div class="grid">
+{% for p in products %}
+  <a class="product-card" href="{{ url_for('product_detail', product_id=p['id']) }}">
+    <article class="card">
+      {% if p['image_filename'] %}
+        <img class="product-thumb" src="{{ url_for('product_image', filename=p['image_filename']) }}" alt="{{ p['title'] }}">
+      {% else %}
+        <div class="product-thumb placeholder">🌿</div>
+      {% endif %}
+      <div class="card-body">
+        <h3>{{ p['title'] }}</h3>
+        <p class="price">{{ "{:,}".format(p['price']) }}원</p>
+        <p class="seller">판매자 {{ p['username'] }}</p>
+        <span class="more">자세히 보기 →</span>
+      </div>
+    </article>
+  </a>
+{% else %}
+  <p>등록된 상품이 없습니다.</p>
+{% endfor %}
+</div>
+{% endblock %}

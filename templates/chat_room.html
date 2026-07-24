@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% block title %}{{ other_name }}님과의 채팅{% endblock %}
+{% block content %}
+<div class="chat-room-shell panel">
+  <header class="room-head">
+    <a href="{{ url_for('chat') }}" aria-label="채팅 목록으로">←</a>
+    <div><b>{{ other_name }}</b><small>상품에 대한 1:1 채팅</small></div>
+    <details class="room-menu">
+      <summary aria-label="채팅 메뉴">•••</summary>
+      <div>
+        {% if blocked_by_me %}
+        <form method="post" action="{{ url_for('chat_user_unblock', product_id=product['id'], partner_id=partner['id']) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="menu-button">차단 해제</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('chat_user_block', product_id=product['id'], partner_id=partner['id']) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="menu-button">상대방 차단</button>
+        </form>
+        {% endif %}
+        <form class="hide-chat-form" method="post" action="{{ url_for('chat_room_delete', product_id=product['id'], partner_id=partner['id']) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="menu-button delete-chat">채팅 삭제</button>
+        </form>
+      </div>
+    </details>
+  </header>
+  <a class="room-product-bar" href="{{ url_for('product_detail', product_id=product['id']) }}">
+    {% if product['image_filename'] %}<img src="{{ url_for('product_image', filename=product['image_filename']) }}" alt="">
+    {% else %}<div class="mini-placeholder">🌿</div>{% endif %}
+    <div><b>{{ product['title'] }}</b><span>{{ "{:,}".format(product['price']) }}원</span></div><span>상품 보기 ›</span>
+  </a>
+  <div id="messages" class="chat-messages room-history"><p class="empty-chat">안전하고 따뜻한 대화를 시작해 보세요.</p></div>
+  {% if blocked_by_me %}
+  <div class="blocked-notice">차단한 사용자입니다. 메시지를 보내려면 차단을 해제하세요.</div>
+  {% elif blocked_by_other %}
+  <div class="blocked-notice">현재 이 사용자와 메시지를 주고받을 수 없습니다.</div>
+  {% else %}
+  <form id="chat-form" class="chat-compose">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="content" maxlength="300" required autocomplete="off" placeholder="메시지를 입력하세요">
+    <button>전송</button>
+  </form>
+  {% endif %}
+  <p id="chat-error" class="chat-error"></p>
+</div>
+<script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+<script nonce="{{ g.csp_nonce }}">
+(() => {
+  const box = document.querySelector('#messages');
+  const form = document.querySelector('#chat-form');
+  const error = document.querySelector('#chat-error');
+  document.querySelector('.hide-chat-form')?.addEventListener('submit', (event) => {
+    if (!confirm('이 채팅을 내 목록에서 숨길까요? 상대방의 대화 내역은 유지됩니다.')) event.preventDefault();
+  });
+  let lastId = 0;
+  const endpoint = {{ url_for('product_messages', product_id=product['id'], partner_id=partner['id'])|tojson }};
+  const me = {{ current_user['id']|tojson }};
+  const productId = {{ product['id']|tojson }};
+  const partnerId = {{ partner['id']|tojson }};
+  const socket = io({transports: ['websocket', 'polling']});
+  function addMessage(m) {
+    document.querySelector('.empty-chat')?.remove();
+    const row = document.createElement('div');
+    row.className = 'bubble-row ' + (m.sender_id === me ? 'mine' : '');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    const text = document.createElement('p');
+    text.textContent = m.content;
+    const time = document.createElement('small');
+    time.textContent = m.created_at;
+    bubble.append(text, time); row.appendChild(bubble); box.appendChild(row);
+    box.scrollTop = box.scrollHeight; lastId = Math.max(lastId, m.id);
+  }
+  async function refresh() {
+    try {
+      const response = await fetch(`${endpoint}?after=${lastId}`, {headers:{Accept:'application/json'}});
+      if (response.ok) (await response.json()).forEach(addMessage);
+    } catch (_) {}
+  }
+  socket.on('connect', () => {
+    socket.emit('join_chat', {product_id: productId, partner_id: partnerId}, (result) => {
+      if (!result?.ok) error.textContent = result?.error || '채팅방 연결에 실패했습니다.';
+    });
+  });
+  socket.on('new_message', (message) => {
+    if (message.id > lastId) addMessage(message);
+  });
+  socket.on('connect_error', () => { error.textContent = '실시간 채팅 연결을 확인하고 있습니다.'; });
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault(); error.textContent = '';
+    const input = form.querySelector('[name=content]');
+    socket.emit('send_message', {product_id: productId, partner_id: partnerId, content: input.value}, (result) => {
+      if (result?.ok) input.value = '';
+      else error.textContent = result?.error || '메시지를 보내지 못했습니다.';
+    });
+  });
+  refresh();
+})();
+</script>
+{% endblock %}

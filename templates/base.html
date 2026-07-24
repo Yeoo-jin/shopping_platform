@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Green Market{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav>
+  <a class="brand" href="{{ url_for('index') }}"><span>🌱</span> Green Market</a>
+  <div>
+    <a href="{{ url_for('index') }}">상품</a>
+    {% if current_user %}
+      <a href="{{ url_for('product_new') }}">상품등록</a>
+      <a href="{{ url_for('chat') }}">채팅</a>
+      <a href="{{ url_for('transfer') }}">포인트</a>
+      <a href="{{ url_for('mypage') }}">마이페이지</a>
+      {% if current_user['role'] == 'admin' %}<a href="{{ url_for('admin') }}">관리자</a>{% endif %}
+      <form class="inline" method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="link-btn">로그아웃</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('login') }}">로그인</a>
+      <a href="{{ url_for('register') }}">회원가입</a>
+    {% endif %}
+  </div>
+</nav>
+<main>
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

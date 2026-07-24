@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}포인트 보내기 | Green Market{% endblock %}
+{% block content %}
+<div class="panel form-panel">
+  <p class="eyebrow">DEMO POINT</p><h2>포인트 보내기</h2>
+  <p class="warning-box">이 포인트는 실제 화폐가 아니며 플랫폼 학습용 가상 포인트입니다.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="request_token" value="{{ request_token }}">
+    <label>받는 사용자<input name="receiver" maxlength="20" required autocomplete="off"></label>
+    <label>보낼 포인트<input type="number" name="amount" min="1" max="100000" required></label>
+    <label>현재 비밀번호<input type="password" name="password" required autocomplete="current-password"></label>
+    <p class="hint">1회 최대 100,000P · 24시간 합계 최대 100,000P</p>
+    <button>안전하게 보내기</button>
+  </form>
+</div>
+{% endblock %}

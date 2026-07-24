@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block content %}
+<div class="panel"><h2>마이페이지</h2>
+<p>아이디: <b>{{ current_user['username'] }}</b></p>
+<p>보유 포인트: <b>{{ "{:,}".format(current_user['balance']) }} P</b></p>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>소개글<textarea name="bio" maxlength="300">{{ current_user['bio'] }}</textarea></label>
+<label>현재 비밀번호(비밀번호 변경 시 필수)<input type="password" name="current_password"></label>
+<label>새 비밀번호(변경 시에만)<input type="password" name="new_password" minlength="12"></label>
+<button>저장</button></form></div>
+<div class="panel"><h3>내 상품</h3>
+{% for p in products %}<p><a href="{{ url_for('product_detail', product_id=p['id']) }}">{{ p['title'] }}</a></p>
+{% else %}<p>등록 상품 없음</p>{% endfor %}</div>{% endblock %}
